@@ -1,57 +1,45 @@
-package plugin;
+package plugin.ui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.EventQueue;
 import java.util.HashMap;
 
-import javax.swing.*;
+import javax.swing.DefaultListModel;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-public class PluginCore {
-	// GUI Widgets that we will need
-	private JFrame frame;
-	private JPanel contentPane;
-	private JLabel bottomLabel;
+import plugin.Plugin;
+import plugin.PluginManager;
+
+public class PluginListView {
 	private JList sideList;
 	private DefaultListModel<String> listModel;
-	private JPanel centerEnvelope;
+	private JLabel bottomLabel;
+	
+	// Plugin manager
+	PluginManager pluginManager;
 	
 	// For holding registered plugin
 	private HashMap<String, Plugin> idToPlugin;
 	private Plugin currentPlugin;
 	
-	// Plugin manager
-	PluginManager pluginManager;
-	
-	public PluginCore() {
+	public PluginListView(final JPanel contentPane, final MainUIWindow mainWindow){
 		idToPlugin = new HashMap<String, Plugin>();
-		
-		// Lets create the elements that we will need
-		frame = new JFrame("Pluggable Board Application");
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
-		contentPane = (JPanel)frame.getContentPane();
-		contentPane.setPreferredSize(new Dimension(700, 500));
-		bottomLabel = new JLabel("No plugins registered yet!");
-		
 		listModel = new DefaultListModel<String>();
 		sideList = new JList(listModel);
 		sideList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		sideList.setLayoutOrientation(JList.VERTICAL);
+		bottomLabel = mainWindow.getBottomLabel();
+		
 		JScrollPane scrollPane = new JScrollPane(sideList);
 		scrollPane.setPreferredSize(new Dimension(100, 50));
 		
-		// Create center display area
-		centerEnvelope = new JPanel(new BorderLayout());
-		centerEnvelope.setBorder(BorderFactory.createLineBorder(Color.black, 5));
-		
-		// Lets lay them out, contentPane by default has BorderLayout as its layout manager
-		contentPane.add(centerEnvelope, BorderLayout.CENTER);
 		contentPane.add(scrollPane, BorderLayout.EAST);
-		contentPane.add(bottomLabel, BorderLayout.SOUTH);
 		
 		// Add action listeners
 		sideList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
@@ -76,25 +64,9 @@ public class PluginCore {
 				// The newly selected plugin is our current plugin
 				currentPlugin = plugin;
 				
-				// Clear previous working area
-				centerEnvelope.removeAll();
-				
-				// Create new working area
-				JPanel centerPanel = new JPanel();
-				centerEnvelope.add(centerPanel, BorderLayout.CENTER); 
-				
-				// Ask plugin to layout the working area
-				currentPlugin.layout(centerPanel);
-				contentPane.revalidate();
-				contentPane.repaint();
-				
-				// Start the plugin
-				currentPlugin.start();
-				
-				bottomLabel.setText("The " + currentPlugin.getId() + " is running!");
+				mainWindow.setPlugin(currentPlugin);
 			}
 		});
-		
 		// Start the plugin manager now that the core is ready
 		try {
 			this.pluginManager = new PluginManager(this);
@@ -104,25 +76,6 @@ public class PluginCore {
 		}
 		Thread thread = new Thread(this.pluginManager);
 		thread.start();
-	}
-	
-	public void start() {
-		EventQueue.invokeLater(new Runnable() {
-			public void run()
-			{
-				frame.pack();
-				frame.setVisible(true);
-			}
-		});
-	}
-	
-	public void stop() {
-		EventQueue.invokeLater(new Runnable() {
-			public void run()
-			{
-				frame.setVisible(false);
-			}
-		});
 	}
 	
 	public void addPlugin(Plugin plugin) {

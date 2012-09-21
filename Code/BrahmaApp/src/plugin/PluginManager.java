@@ -11,12 +11,14 @@ import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
+import plugin.ui.PluginListView;
+
 public class PluginManager implements Runnable {
-	private PluginCore core;
+	private PluginListView core;
 	private WatchDir watchDir;
 	private HashMap<Path, Plugin> pathToPlugin;
 
-	public PluginManager(PluginCore core) throws IOException {
+	public PluginManager(PluginListView core) throws IOException {
 		this.core = core;
 		this.pathToPlugin = new HashMap<Path, Plugin>();
 		watchDir = new WatchDir(this, FileSystems.getDefault().getPath("plugins"), false);
