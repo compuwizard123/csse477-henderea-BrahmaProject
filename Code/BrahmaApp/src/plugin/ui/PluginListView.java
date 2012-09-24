@@ -13,28 +13,25 @@ import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import plugin.IPluginHost;
+import plugin.IPluginSubscriber;
 import plugin.Plugin;
 import plugin.PluginManager;
 
-public class PluginListView {
+public class PluginListView implements IPluginSubscriber {
 	private JList sideList;
 	private DefaultListModel<String> listModel;
-	private JLabel bottomLabel;
+	private IPluginHost pluginHost;
 	
 	// Plugin manager
-	PluginManager pluginManager;
+	final PluginManager pluginManager;
 	
-	// For holding registered plugin
-	private HashMap<String, Plugin> idToPlugin;
-	private Plugin currentPlugin;
-	
-	public PluginListView(final JPanel contentPane, final MainUIWindow mainWindow){
-		idToPlugin = new HashMap<String, Plugin>();
+	public PluginListView(final JPanel contentPane, IPluginHost pluginHost){
 		listModel = new DefaultListModel<String>();
 		sideList = new JList(listModel);
+		this.pluginHost = pluginHost;
 		sideList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		sideList.setLayoutOrientation(JList.VERTICAL);
-		bottomLabel = mainWindow.getBottomLabel();
 		
 		JScrollPane scrollPane = new JScrollPane(sideList);
 		scrollPane.setPreferredSize(new Dimension(100, 50));
@@ -52,45 +49,23 @@ public class PluginListView {
 				// List has finalized selection, let's process further
 				int index = sideList.getSelectedIndex();
 				String id = listModel.elementAt(index);
-				Plugin plugin = idToPlugin.get(id);
 				
-				if(plugin == null || plugin.equals(currentPlugin))
-					return;
-				
-				// Stop previously running plugin
-				if(currentPlugin != null)
-					currentPlugin.stop();
-				
-				// The newly selected plugin is our current plugin
-				currentPlugin = plugin;
-				
-				mainWindow.setPlugin(currentPlugin);
+				pluginManager.setPlugin(id);
 			}
 		});
 		// Start the plugin manager now that the core is ready
-		try {
-			this.pluginManager = new PluginManager(this);
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-		}
+		this.pluginManager = new PluginManager(this, pluginHost);
 		Thread thread = new Thread(this.pluginManager);
 		thread.start();
 	}
 	
 	public void addPlugin(Plugin plugin) {
-		this.idToPlugin.put(plugin.getId(), plugin);
 		this.listModel.addElement(plugin.getId());
-		this.bottomLabel.setText("The " + plugin.getId() + " plugin has been recently added!");
+		this.pluginHost.setStatusText("The " + plugin.getId() + " plugin has been recently added!");
 	}
 	
 	public void removePlugin(String id) {
-		Plugin plugin = this.idToPlugin.remove(id);
 		this.listModel.removeElement(id);
-		
-		// Stop the plugin if it is still running
-		plugin.stop();
-
-		this.bottomLabel.setText("The " + plugin.getId() + " plugin has been recently removed!");
+		this.pluginHost.setStatusText("The " + id + " plugin has been recently removed!");
 	}
 }

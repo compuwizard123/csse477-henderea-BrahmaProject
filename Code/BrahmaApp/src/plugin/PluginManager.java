@@ -11,17 +11,27 @@ import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
-import plugin.ui.PluginListView;
 
 public class PluginManager implements Runnable {
-	private PluginListView core;
+	private IPluginSubscriber core;
+	private IPluginHost pluginHost;
 	private WatchDir watchDir;
 	private HashMap<Path, Plugin> pathToPlugin;
 
-	public PluginManager(PluginListView core) throws IOException {
+	// For holding registered plugin
+	private HashMap<String, Plugin> idToPlugin;
+	private Plugin currentPlugin;
+
+	public PluginManager(IPluginSubscriber core, IPluginHost pluginHost) {
 		this.core = core;
+		this.pluginHost = pluginHost;
+		idToPlugin = new HashMap<String, Plugin>();
 		this.pathToPlugin = new HashMap<Path, Plugin>();
-		watchDir = new WatchDir(this, FileSystems.getDefault().getPath("plugins"), false);
+		try {
+			watchDir = new WatchDir(this, FileSystems.getDefault().getPath("plugins"), false);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -62,6 +72,7 @@ public class PluginManager implements Runnable {
         
         // Create a new instance of the plugin class and add to the core
         Plugin plugin = (Plugin)pluginClass.newInstance();
+        this.addPlugin(plugin);
         this.core.addPlugin(plugin);
         this.pathToPlugin.put(bundlePath, plugin);
 
@@ -72,7 +83,33 @@ public class PluginManager implements Runnable {
 	void unloadBundle(Path bundlePath) {
 		Plugin plugin = this.pathToPlugin.remove(bundlePath);
 		if(plugin != null) {
+			this.removePlugin(plugin.getId());
 			this.core.removePlugin(plugin.getId());
 		}
+	}
+
+	public void setPlugin(String id) {
+		Plugin plugin = idToPlugin.get(id);
+		
+		if(plugin == null || plugin.equals(currentPlugin))
+			return;
+		
+		// Stop previously running plugin
+		if(currentPlugin != null)
+			currentPlugin.stop();
+		
+		// The newly selected plugin is our current plugin
+		currentPlugin = plugin;
+		
+		pluginHost.setPlugin(currentPlugin);
+	}
+	
+	public void addPlugin(Plugin plugin) {
+		this.idToPlugin.put(plugin.getId(), plugin);
+	}
+	
+	public void removePlugin(String id) {
+		Plugin plugin = this.idToPlugin.remove(id);
+		plugin.stop();
 	}
 }

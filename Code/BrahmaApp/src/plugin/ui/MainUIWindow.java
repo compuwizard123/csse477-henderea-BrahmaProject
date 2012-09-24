@@ -17,10 +17,11 @@ import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import plugin.IPluginHost;
 import plugin.Plugin;
 import plugin.PluginManager;
 
-public class MainUIWindow {
+public class MainUIWindow implements IPluginHost {
 	// GUI Widgets that we will need
 		private JFrame frame;
 		private JPanel contentPane;
@@ -73,6 +74,7 @@ public class MainUIWindow {
 		});
 	}
 	
+	@Override
 	public void setPlugin(Plugin currentPlugin) {
 		// Clear previous working area
 		centerEnvelope.removeAll();
@@ -94,5 +96,9 @@ public class MainUIWindow {
 	
 	public JLabel getBottomLabel() {
 		return bottomLabel;
+	}
+	
+	public void setStatusText(String text) {
+		bottomLabel.setText(text);
 	}
 }
