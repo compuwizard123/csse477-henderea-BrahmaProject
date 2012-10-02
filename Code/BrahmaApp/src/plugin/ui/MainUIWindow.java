@@ -36,7 +36,9 @@ public class MainUIWindow implements IPluginHost {
 		contentPane = createMainWindow();
 		setupContentPane();
 		IPluginSubscriber pluginSubscriber = new PluginListView(contentPane, this);
-		new FilesystemWatcher(pluginSubscriber);
+		Runnable filesystemWatcher = new FilesystemWatcher(pluginSubscriber);
+		Thread thread = new Thread(filesystemWatcher);
+		thread.start();
 	}
 	
 	private JPanel createMainWindow() {

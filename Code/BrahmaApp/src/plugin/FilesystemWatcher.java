@@ -16,11 +16,11 @@ import java.nio.file.WatchService;
 import java.util.HashMap;
 import java.util.Map;
 
-public class FilesystemWatcher {
+public class FilesystemWatcher implements Runnable {
 	private PluginLoader pluginLoader;
 	private WatchService watcher;
     private final Map<WatchKey,Path> keys;
-    private boolean trace = false;
+    private boolean trace = true;
 	
 	public FilesystemWatcher(IPluginSubscriber pluginSubscriber) {
 		this.pluginLoader = new PluginLoader(pluginSubscriber);
@@ -52,7 +52,6 @@ public class FilesystemWatcher {
 	
     void processEvents() {
         while (true) {
-
             // wait for key to be signalled
             WatchKey key;
             try {
@@ -116,4 +115,9 @@ public class FilesystemWatcher {
     static <T> WatchEvent<T> cast(WatchEvent<?> event) {
         return (WatchEvent<T>)event;
     }
+
+	@Override
+	public void run() {
+		this.processEvents();
+	}
 }
