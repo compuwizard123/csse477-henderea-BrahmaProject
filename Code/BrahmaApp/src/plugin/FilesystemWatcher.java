@@ -17,13 +17,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class FilesystemWatcher implements Runnable {
-	private PluginLoader pluginLoader;
+	private DependencyResolver dependencyResolver;
 	private WatchService watcher;
     private final Map<WatchKey,Path> keys;
     private boolean trace = false;
 	
 	public FilesystemWatcher(IPluginSubscriber pluginSubscriber) {
-		this.pluginLoader = new PluginLoader(pluginSubscriber);
+		this.dependencyResolver = new DependencyResolver(pluginSubscriber);
 		this.keys = new HashMap<WatchKey,Path>();
         try {
 			this.watcher = FileSystems.getDefault().newWatchService();
@@ -84,13 +84,13 @@ public class FilesystemWatcher implements Runnable {
                 System.out.format("%s: %s\n", event.kind().name(), child);
                 
                 // C.R. Changes
-            	if(this.pluginLoader != null) {
+            	if(this.dependencyResolver != null) {
             		try {
                         if(kind == ENTRY_CREATE) {
-                        	this.pluginLoader.loadBundle(child);
+                        	this.dependencyResolver.registerPlugin(child);
                         }
                         else if(kind == ENTRY_DELETE) {
-                        	this.pluginLoader.unloadBundle(child);
+                        	this.dependencyResolver.unloadBundle(child);
                         }
             		}
             		catch(Exception e) {

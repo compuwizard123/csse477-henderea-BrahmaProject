@@ -17,19 +17,6 @@ public class PluginLoader {
 	public PluginLoader(IPluginSubscriber pluginSubscriber) {
 		this.pluginSubscriber = pluginSubscriber;
 		this.pathToPlugin = new HashMap<Path, Plugin>();
-		try {
-			Path pluginDir = FileSystems.getDefault().getPath("plugins");
-			File pluginFolder = pluginDir.toFile();
-			File[] files = pluginFolder.listFiles();
-			if(files != null) {
-				for(File f : files) {
-					this.loadBundle(f.toPath());
-				}
-			}
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-		}
 	}
 	
 	void loadBundle(Path bundlePath) throws Exception {
