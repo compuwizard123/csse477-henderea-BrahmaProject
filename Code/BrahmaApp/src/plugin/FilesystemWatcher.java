@@ -20,7 +20,7 @@ public class FilesystemWatcher implements Runnable {
 	private PluginLoader pluginLoader;
 	private WatchService watcher;
     private final Map<WatchKey,Path> keys;
-    private boolean trace = true;
+    private boolean trace = false;
 	
 	public FilesystemWatcher(IPluginSubscriber pluginSubscriber) {
 		this.pluginLoader = new PluginLoader(pluginSubscriber);
@@ -33,6 +33,7 @@ public class FilesystemWatcher implements Runnable {
 			e.printStackTrace();
 		}
         this.trace = true;
+        
 	}
 	
 	private void register(Path dir) throws IOException {

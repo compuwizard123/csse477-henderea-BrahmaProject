@@ -3,6 +3,7 @@ package plugin;
 import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.jar.Attributes;
@@ -16,6 +17,19 @@ public class PluginLoader {
 	public PluginLoader(IPluginSubscriber pluginSubscriber) {
 		this.pluginSubscriber = pluginSubscriber;
 		this.pathToPlugin = new HashMap<Path, Plugin>();
+		try {
+			Path pluginDir = FileSystems.getDefault().getPath("plugins");
+			File pluginFolder = pluginDir.toFile();
+			File[] files = pluginFolder.listFiles();
+			if(files != null) {
+				for(File f : files) {
+					this.loadBundle(f.toPath());
+				}
+			}
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	void loadBundle(Path bundlePath) throws Exception {
