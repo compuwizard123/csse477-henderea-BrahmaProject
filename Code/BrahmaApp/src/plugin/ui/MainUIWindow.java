@@ -17,13 +17,13 @@ import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import plugin.FilesystemWatcher;
 import plugin.IPluginHost;
+import plugin.IPluginSubscriber;
 import plugin.Plugin;
-import plugin.PluginManager;
 
 public class MainUIWindow implements IPluginHost {
-	// GUI Widgets that we will need
-		private JFrame frame;
+		// GUI Widgets that we will need
 		private JPanel contentPane;
 		private JLabel bottomLabel;
 		private JPanel centerEnvelope;
@@ -33,29 +33,15 @@ public class MainUIWindow implements IPluginHost {
 	}
 	
 	public MainUIWindow(){
-		// Lets create the elements that we will need
-		frame = new JFrame("Pluggable Board Application");
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
-		contentPane = (JPanel)frame.getContentPane();
-		contentPane.setPreferredSize(new Dimension(700, 500));
-		bottomLabel = new JLabel("No plugins registered yet!");
-		
-		// Create center display area
-		centerEnvelope = new JPanel(new BorderLayout());
-		centerEnvelope.setBorder(BorderFactory.createLineBorder(Color.black, 5));
-		
-		// Lets lay them out, contentPane by default has BorderLayout as its layout manager
-		contentPane.add(centerEnvelope, BorderLayout.CENTER);
-		
-		contentPane.add(bottomLabel, BorderLayout.SOUTH);
-		
-		new PluginListView(contentPane, this);
-		this.start();
+		contentPane = createMainWindow();
+		setupContentPane();
+		IPluginSubscriber pluginSubscriber = new PluginListView(contentPane, this);
+		new FilesystemWatcher(pluginSubscriber);
 	}
 	
-
-	public void start() {
+	private JPanel createMainWindow() {
+		final JFrame frame = new JFrame("Pluggable Board Application");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		EventQueue.invokeLater(new Runnable() {
 			public void run()
 			{
@@ -63,15 +49,24 @@ public class MainUIWindow implements IPluginHost {
 				frame.setVisible(true);
 			}
 		});
+		return((JPanel) frame.getContentPane());
 	}
 	
-	public void stop() {
-		EventQueue.invokeLater(new Runnable() {
-			public void run()
-			{
-				frame.setVisible(false);
-			}
-		});
+	private void setupContentPane() {
+		contentPane.setPreferredSize(new Dimension(700, 500));
+		setupCenter();
+		setupLabel();
+		contentPane.add(centerEnvelope, BorderLayout.CENTER);
+		contentPane.add(bottomLabel, BorderLayout.SOUTH);
+	}
+	
+	private void setupCenter() {
+		centerEnvelope = new JPanel(new BorderLayout());
+		centerEnvelope.setBorder(BorderFactory.createLineBorder(Color.black, 5));
+	}
+	
+	private void setupLabel() {
+		bottomLabel = new JLabel("No plugins registered yet!");
 	}
 	
 	@Override
@@ -92,10 +87,6 @@ public class MainUIWindow implements IPluginHost {
 		currentPlugin.start();
 		
 		bottomLabel.setText("The " + currentPlugin.getId() + " is running!");
-	}
-	
-	public JLabel getBottomLabel() {
-		return bottomLabel;
 	}
 	
 	public void setStatusText(String text) {

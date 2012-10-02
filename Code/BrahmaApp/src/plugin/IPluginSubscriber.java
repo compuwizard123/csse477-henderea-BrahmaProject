@@ -4,5 +4,5 @@ public interface IPluginSubscriber {
 
 	public void addPlugin(Plugin plugin);
 	
-	public void removePlugin(String id);
+	public void removePlugin(Plugin plugin);
 }

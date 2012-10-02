@@ -16,22 +16,20 @@ import javax.swing.event.ListSelectionListener;
 import plugin.IPluginHost;
 import plugin.IPluginSubscriber;
 import plugin.Plugin;
-import plugin.PluginManager;
+import plugin.RuntimeManager;
 
 public class PluginListView implements IPluginSubscriber {
 	private JList sideList;
-	private DefaultListModel<String> listModel;
+	private DefaultListModel<Plugin> listModel;
 	private IPluginHost pluginHost;
 	
-	// Plugin manager
-	final PluginManager pluginManager;
-	
-	public PluginListView(final JPanel contentPane, IPluginHost pluginHost){
-		listModel = new DefaultListModel<String>();
+	public PluginListView(JPanel contentPane, IPluginHost pluginHost){
+		listModel = new DefaultListModel<Plugin>();
 		sideList = new JList(listModel);
 		this.pluginHost = pluginHost;
 		sideList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		sideList.setLayoutOrientation(JList.VERTICAL);
+		final RuntimeManager runtimeManager = new RuntimeManager(pluginHost);
 		
 		JScrollPane scrollPane = new JScrollPane(sideList);
 		scrollPane.setPreferredSize(new Dimension(100, 50));
@@ -48,23 +46,19 @@ public class PluginListView implements IPluginSubscriber {
 				
 				// List has finalized selection, let's process further
 				int index = sideList.getSelectedIndex();
-				String id = listModel.elementAt(index);
+				Plugin plugin = listModel.elementAt(index);
 				
-				pluginManager.setPlugin(id);
+				runtimeManager.setPlugin(plugin);
 			}
 		});
-		// Start the plugin manager now that the core is ready
-		this.pluginManager = new PluginManager(this, pluginHost);
-		Thread thread = new Thread(this.pluginManager);
-		thread.start();
 	}
 	
 	public void addPlugin(Plugin plugin) {
-		this.listModel.addElement(plugin.getId());
+		this.listModel.addElement(plugin);
 		this.pluginHost.setStatusText("The " + plugin.getId() + " plugin has been recently added!");
 	}
 	
-	public void removePlugin(String id) {
+	public void removePlugin(Plugin id) {
 		this.listModel.removeElement(id);
 		this.pluginHost.setStatusText("The " + id + " plugin has been recently removed!");
 	}
