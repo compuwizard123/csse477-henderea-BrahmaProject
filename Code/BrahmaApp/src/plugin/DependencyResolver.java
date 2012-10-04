@@ -44,12 +44,9 @@ public class DependencyResolver {
 			File jarBundle = bundlePath.toFile();
 			JarFile jarFile = new JarFile(jarBundle);
 			Manifest mf = jarFile.getManifest();
-			Attributes entries = mf.getMainAttributes();
-			System.out.println(entries.toString());
-			String dependencies = entries.getValue("Dependencies");
-			String pluginClass = entries.getValue("Plugin-Class");
-			System.out.println("Plugin class: " + pluginClass);
-			System.out.println("Dependencies: " + dependencies);
+			Attributes mainAttribs = mf.getMainAttributes();
+			String dependencies = mainAttribs.getValue("Dependencies");
+			String pluginClass = mainAttribs.getValue("Plugin-Class");
 			if (dependencies != null) {
 				String[] dependencyList = dependencies.split("\\s+");
 				this.dependencyMap.put(pluginClass, Arrays.asList(dependencyList));
@@ -97,7 +94,18 @@ public class DependencyResolver {
 	}
 	
 	public void unloadBundle(Path bundlePath) {
-		//add dependency resolution
+		String id = null;
+		for (String key : this.pathToPluginMap.keySet()) {
+			if (this.pathToPluginMap.get(key).equals(bundlePath)) {
+				id = key;
+				break;
+			}
+		}
+		if (id != null) {
+			this.pathToPluginMap.remove(id);
+			this.dependencyMap.remove(id);
+			this.pluginStatusMap.remove(id);
+		}
 		this.pluginLoader.unloadBundle(bundlePath);
 	}
 }
