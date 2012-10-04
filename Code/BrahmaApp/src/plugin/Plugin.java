@@ -16,6 +16,10 @@ public abstract class Plugin {
 	public void setId(String id) {
 		this.id = id;
 	}
+	
+	public String toString() {
+		return this.id;
+	}
 
 	// Callback method
 	public abstract void layout(JPanel panel);
